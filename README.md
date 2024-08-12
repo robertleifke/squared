@@ -1,33 +1,13 @@
-# v4-template
-### **A template for writing Uniswap v4 Hooks 🦄**
+# Squared
 
-[`Use this Template`](https://github.com/uniswapfoundation/v4-template/generate)
+![image](https://github.com/user-attachments/assets/06cfd20d-e63f-401a-98d8-a40f9d9578be)
 
-1. The example hook [Counter.sol](src/Counter.sol) demonstrates the `beforeSwap()` and `afterSwap()` hooks
-2. The test template [Counter.t.sol](test/Counter.t.sol) preconfigures the v4 pool manager, test tokens, and test liquidity.
-
-<details>
-<summary>Updating to v4-template:latest</summary>
-
-This template is actively maintained -- you can update the v4 dependencies, scripts, and helpers: 
-```bash
-git remote add template https://github.com/uniswapfoundation/v4-template
-git fetch template
-git merge template/main <BRANCH> --allow-unrelated-histories
-```
+The smart contract suite for **Squared**, a CFMM that that executes an option strategy for which liquidity providers earn *yield* for underwriting "Squeeth" on on any token. The CFMM, Squared is designed to interact with Numo and other oracle-free lending markets. 
 
 </details>
 
 ---
 
-## Set up
-
-*requires [foundry](https://book.getfoundry.sh)*
-
-```
-forge install
-forge test
-```
 
 ### Local Development (Anvil)
 
@@ -92,7 +72,6 @@ forge create script/mocks/mUSDC.sol:MockUSDC \
 <summary><h2>Troubleshooting</h2></summary>
 
 
-
 ### *Permission Denied*
 
 When installing dependencies with `forge install`, Github may throw a `Permission Denied` error
@@ -117,11 +96,94 @@ Hook deployment failures are caused by incorrect flags or incorrect salt mining
 
 ---
 
-Additional resources:
 
-[v4-periphery](https://github.com/uniswap/v4-periphery) contains advanced hook implementations that serve as a great reference
 
-[v4-core](https://github.com/uniswap/v4-core)
+### Build
 
-[v4-by-example](https://v4-by-example.org)
+Build the contracts:
 
+```sh
+$ forge build
+```
+
+### Clean
+
+Delete the build artifacts and cache directories:
+
+```sh
+$ forge clean
+```
+
+### Compile
+
+Compile the contracts:
+
+```sh
+$ forge build
+```
+
+### Coverage
+
+Get a test coverage report:
+
+```sh
+$ forge coverage
+```
+
+### Format
+
+Format the contracts:
+
+```sh
+$ forge fmt
+```
+
+### Gas Usage
+
+Get a gas report:
+
+```sh
+$ forge test --gas-report
+```
+
+| Contract         |           |
+|------------------|-----------|
+| Deployment Cost  | Deployment Size |
+| 900917           | 3996      |
+| Function Name    | min   | avg  | median | max  | # calls |
+|------------------|-------|------|--------|------|---------|
+| checkQuintic     | 387   | 6578 | 395    | 20406| 5       |
+
+
+### Lint
+
+Lint the contracts:
+
+```sh
+$ bun run lint
+```
+
+### Test
+
+Run the tests:
+
+```sh
+$ forge test
+```
+
+Generate test coverage and output result to the terminal:
+
+```sh
+$ bun run test:coverage
+```
+
+Generate test coverage with lcov report (you'll have to open the `./coverage/index.html` file in your browser, to do so
+simply copy paste the path):
+
+```sh
+$ bun run test:coverage:report
+```
+
+## License
+
+This project is licensed under MIT.
