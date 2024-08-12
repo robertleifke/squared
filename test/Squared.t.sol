@@ -12,7 +12,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {CurrencyLibrary, Currency} from "v4-core/src/types/Currency.sol";
 import {PoolSwapTest} from "v4-core/src/test/PoolSwapTest.sol";
 import {Deployers} from "v4-core/test/utils/Deployers.sol";
-import {Counter} from "../src/Counter.sol";
+import {Squared} from "../src/Squared.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 
 contract CounterTest is Test, Deployers {
@@ -20,7 +20,7 @@ contract CounterTest is Test, Deployers {
     using CurrencyLibrary for Currency;
     using StateLibrary for IPoolManager;
 
-    Counter hook;
+    Squared hook;
     PoolId poolId;
 
     function setUp() public {
@@ -36,7 +36,7 @@ contract CounterTest is Test, Deployers {
             ) ^ (0x4444 << 144) // Namespace the hook to avoid collisions
         );
         deployCodeTo("Counter.sol:Counter", abi.encode(manager), flags);
-        hook = Counter(flags);
+        hook = Squared(flags);
 
         // Create the pool
         key = PoolKey(currency0, currency1, 3000, 60, IHooks(hook));
