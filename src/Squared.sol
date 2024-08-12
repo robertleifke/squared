@@ -9,20 +9,14 @@ import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
+import {Currency, CurrencyLibrary} from "v4-core/src/types/Currency.sol";
+import {SafeCast} from "v4-core/src/libraries/SafeCast.sol";
 
 contract Squared is BaseHook {
-    using PoolIdLibrary for PoolKey;
-
-    // NOTE: ---------------------------------------------------------
-    // state variables should typically be unique to a pool
-    // a single hook contract should be able to service multiple pools
-    // ---------------------------------------------------------------
+    using CurrencyLibrary for Currency;
+    using SafeCast for uint256;
 
     mapping(PoolId => uint256 count) public beforeSwapCount;
-    mapping(PoolId => uint256 count) public afterSwapCount;
-
-    mapping(PoolId => uint256 count) public beforeAddLiquidityCount;
-    mapping(PoolId => uint256 count) public beforeRemoveLiquidityCount;
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
@@ -30,60 +24,73 @@ contract Squared is BaseHook {
         return Hooks.Permissions({
             beforeInitialize: false,
             afterInitialize: false,
-            beforeAddLiquidity: true,
+            beforeAddLiquidity: true, // Prevent v4 liquidity
             afterAddLiquidity: false,
             beforeRemoveLiquidity: true,
             afterRemoveLiquidity: false,
-            beforeSwap: true,
-            afterSwap: true,
+            beforeSwap: true, // Override how swaps are done
+            afterSwap: false,
             beforeDonate: false,
             afterDonate: false,
-            beforeSwapReturnDelta: false,
+            beforeSwapReturnDelta: true, // Allow beforeSwap to return custom delta
             afterSwapReturnDelta: false,
             afterAddLiquidityReturnDelta: false,
             afterRemoveLiquidityReturnDelta: false
         });
     }
 
-    // -----------------------------------------------
-    // NOTE: see IHooks.sol for function documentation
-    // -----------------------------------------------
+    // -------------------------------------------- //
+    //          STATE CHANGING FUNCTIONS
+    // -------------------------------------------- //
 
-    function beforeSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, bytes calldata)
+    function beforeSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata params, bytes calldata)
         external
         override
         returns (bytes4, BeforeSwapDelta, uint24)
     {
-        beforeSwapCount[key.toId()]++;
+        // -------------------------------------------------------------------------------------------- //
+        // Example NoOp: if swap is exactInput and the amount is 69e18, then the swap will be skipped   //
+        // -------------------------------------------------------------------------------------------- //
+        if (params.amountSpecified == -69e18) {
+            // take the input token so that v3-swap is skipped...
+            uint256 amountTaken = 69e18;
+            Currency input = params.zeroForOne ? key.currency0 : key.currency1;
+            poolManager.mint(address(this), input.toId(), amountTaken);
+
+            // to NoOp the exact input, we return the amount that's taken by the hook
+            // return (BaseHook.beforeSwap.selector, toBeforeSwapDelta(amountTaken.toInt128(), 0), 0);
+        }
+
+        // beforeSwapCount[key.toId()]++;
         return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
-    function afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)
-        external
-        override
-        returns (bytes4, int128)
-    {
-        afterSwapCount[key.toId()]++;
-        return (BaseHook.afterSwap.selector, 0);
-    }
+    // function afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)
+    //     external
+    //     override
+    //     returns (bytes4, int128)
+    // {
+    //     afterSwapCount[key.toId()]++;
+    //     return (BaseHook.afterSwap.selector, 0);
+    // }
 
-    function beforeAddLiquidity(
-        address,
-        PoolKey calldata key,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        beforeAddLiquidityCount[key.toId()]++;
-        return BaseHook.beforeAddLiquidity.selector;
-    }
+    // function beforeAddLiquidity(
+    //     address,
+    //     PoolKey calldata key,
+    //     IPoolManager.ModifyLiquidityParams calldata,
+    //     bytes calldata
+    // ) external override returns (bytes4) {
+    //     beforeAddLiquidity[key.toId()]++;
+    //     return BaseHook.beforeAddLiquidity.selector;
+    // }
 
-    function beforeRemoveLiquidity(
-        address,
-        PoolKey calldata key,
-        IPoolManager.ModifyLiquidityParams calldata,
-        bytes calldata
-    ) external override returns (bytes4) {
-        beforeRemoveLiquidityCount[key.toId()]++;
-        return BaseHook.beforeRemoveLiquidity.selector;
-    }
+    // function beforeRemoveLiquidity(
+    //     address,
+    //     PoolKey calldata key,
+    //     IPoolManager.ModifyLiquidityParams calldata,
+    //     bytes calldata
+    // ) external override returns (bytes4) {
+    //     beforeRemoveLiquidity[key.toId()]++;
+    //     return BaseHook.beforeRemoveLiquidity.selector;
+    // }
 }

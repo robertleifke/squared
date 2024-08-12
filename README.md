@@ -4,6 +4,26 @@
 
 The smart contract suite for **Squared**, a CFMM that that executes an option strategy for which liquidity providers earn *yield* for underwriting "Squeeth" on on any token. The CFMM, Squared is designed to interact with Numo and other oracle-free lending markets. 
 
+> **This repo is not production ready**
+
+---
+
+## Methodology
+
+1. To faciliate a custom curve, we need to skip the concentrated liquidity swap. We'll use the [NoOp](https://www.v4-by-example.org/hooks/no-op) pattern, allowing us to implement the Squared curve.
+
+2. The hook will hold its own token balances (as liquidity for the Squared curve)
+
+3. The `beforeSwap` hook will handle the Squared curve:
+    1. inbound tokens are taken from the PoolManager
+        * this creates a debt, that is paid for by the swapper via the swap router
+        * the inbound token is added to the hook's reserves
+    2. an *equivalent* number of outbound tokens is sent from the hook to the PoolManager
+        * the outbound token is removed from the hook's reserves
+        * this creates a credit -- the swap router claims it and sends it to the swapper
+
+---
+
 </details>
 
 ---
